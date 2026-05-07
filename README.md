@@ -112,13 +112,13 @@ Use the HTTP transport URL `http://localhost:8080/plugin-mcp/` with Basic auth h
 
 ```bash
 # List all tools
-curl -s -u root:password \
+curl -s -u root:root \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' \
   http://localhost:8080/plugin-mcp/
 
 # List issues in a repository
-curl -s -u root:password \
+curl -s -u root:root \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"list_issues","arguments":{"owner":"root","repo":"myrepo","state":"open"}},"id":2}' \
   http://localhost:8080/plugin-mcp/
@@ -130,7 +130,7 @@ curl -s -u root:password \
 npx @modelcontextprotocol/inspector \
   --transport http \
   --url http://localhost:8080/plugin-mcp/ \
-  --header "Authorization: Basic $(echo -n 'root:password' | base64)"
+  --header "Authorization: Basic $(echo -n 'root:root' | base64)"
 ```
 
 ## GitBucket Version Compatibility
@@ -168,7 +168,7 @@ Requires a running GitBucket instance with the plugin installed:
 ./gradlew shadowJar
 cp build/libs/gitbucket-mcp-plugin-*.jar $GITBUCKET_HOME/plugins/
 # start GitBucket...
-python3 scripts/integration_test.py --host localhost --port 8080 --user root --password password
+python3 scripts/integration_test.py --host localhost --port 8080 --user root --password root
 ```
 
 The script creates test fixtures, exercises all 14 tools, and reports a pass/fail summary.

@@ -24,7 +24,7 @@ import base64
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 8080
 DEFAULT_USER = "root"
-DEFAULT_PASSWORD = "password"
+DEFAULT_PASSWORD = "root"
 
 GITBUCKET_VERSIONS = None  # filled in from args
 PASSED = []
