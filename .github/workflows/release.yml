@@ -40,11 +40,6 @@ jobs:
       - name: Build shadow JAR
         run: ./gradlew shadowJar
 
-      - name: Rename artifact
-        run: |
-          mv build/libs/gitbucket-mcp-plugin-*.jar \
-             build/libs/gitbucket-mcp-plugin-${{ steps.version.outputs.VERSION }}.jar
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

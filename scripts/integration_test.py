@@ -96,12 +96,18 @@ def wait_for_gitbucket(base_url: str, timeout: int = 120) -> bool:
 
 def setup_gitbucket(base_url: str, user: str, password: str) -> bool:
     """Complete the GitBucket initial setup wizard if not already done."""
-    code, body = http_get(f"{base_url}/")
-    if "install" not in body and "/signin" in body or code == 200 and "sign in" in body.lower():
+    install_code, install_body = http_get(f"{base_url}/install")
+    install_form_present = install_code == 200 and (
+        "adminName" in install_body
+        or "adminPassword" in install_body
+        or "adminMailAddress" in install_body
+    )
+    if install_form_present:
+        print("  Running GitBucket initial setup ...")
+    else:
         print("  GitBucket already initialized.")
         return True
 
-    print("  Running GitBucket initial setup ...")
     code, body = http_post(f"{base_url}/install", {
         "adminName": user,
         "adminPassword": password,
