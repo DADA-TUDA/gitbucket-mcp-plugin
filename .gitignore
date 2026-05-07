@@ -14,7 +14,7 @@ build/
 target/
 *.class
 *.log
-
+.claude/
 # Package files
 *.jar
 *.war

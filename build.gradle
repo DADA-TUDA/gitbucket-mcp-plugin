@@ -13,16 +13,24 @@ repositories {
 
 dependencies {
     implementation 'org.scala-lang:scala-library:2.13.18'
+
     compileOnly 'io.github.gitbucket:gitbucket_2.13:4.46.0'
+    compileOnly 'io.github.gitbucket:solidbase:1.1.0'
     compileOnly 'org.scalatra:scalatra-javax_2.13:3.1.2'
     compileOnly 'io.github.json4s:json4s-jackson_2.13:4.1.0'
-    compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
-    
-    testImplementation 'org.scalatest:scalatest_2.13:3.2.18'
-}
+    compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    compileOnly 'com.github.takezoe:blocking-slick_2.13:0.0.14'
 
-scala {
-    scalaVersion = '2.13.18'
+    testImplementation 'org.scalatest:scalatest_2.13:3.2.18'
+    testImplementation 'org.scalatestplus:junit-4-13_2.13:3.2.18.0'
+    testRuntimeOnly 'junit:junit:4.13.2'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    testCompileOnly 'io.github.gitbucket:gitbucket_2.13:4.46.0'
+    testCompileOnly 'javax.servlet:javax.servlet-api:4.0.1'
+    testRuntimeOnly 'io.github.gitbucket:gitbucket_2.13:4.46.0'
+    testRuntimeOnly 'javax.servlet:javax.servlet-api:4.0.1'
+    testRuntimeOnly 'com.github.takezoe:blocking-slick_2.13:0.0.14'
 }
 
 sourceSets {
@@ -31,9 +39,13 @@ sourceSets {
             srcDirs = ['src/main/scala', 'src/main/java']
         }
         java {
-            srcDirs = []  // Java sources are compiled by Scala compiler
+            srcDirs = []
         }
     }
+}
+
+test {
+    useJUnit()
 }
 
 shadowJar {
