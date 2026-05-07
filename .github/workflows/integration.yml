@@ -1,0 +1,95 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  integration:
+    name: Integration (Java ${{ matrix.java }} / GB ${{ matrix.gitbucket }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Java 17 × all supported GitBucket versions
+          - java: '17'
+            gitbucket: '4.46.0'
+          - java: '17'
+            gitbucket: '4.45.0'
+          - java: '17'
+            gitbucket: '4.44.0'
+          - java: '17'
+            gitbucket: '4.43.0'
+          - java: '17'
+            gitbucket: '4.42.0'
+          # Java 21 × latest GitBucket
+          - java: '21'
+            gitbucket: '4.46.0'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build plugin JAR
+        run: ./gradlew shadowJar
+
+      - name: Download GitBucket ${{ matrix.gitbucket }}
+        run: |
+          curl -fsSL \
+            "https://github.com/gitbucket/gitbucket/releases/download/${{ matrix.gitbucket }}/gitbucket.war" \
+            -o gitbucket.war
+
+      - name: Set up GitBucket home and deploy plugin
+        run: |
+          mkdir -p gitbucket-home/plugins
+          cp build/libs/gitbucket-mcp-plugin-*.jar gitbucket-home/plugins/
+
+      - name: Start GitBucket
+        run: |
+          java -Dgitbucket.home=$(pwd)/gitbucket-home \
+               -jar gitbucket.war \
+               --port=8080 \
+               &
+          echo $! > gitbucket.pid
+          echo "GitBucket PID: $(cat gitbucket.pid)"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run integration tests
+        run: |
+          python3 scripts/integration_test.py \
+            --host localhost \
+            --port 8080 \
+            --user root \
+            --password password
+        timeout-minutes: 5
+
+      - name: Stop GitBucket
+        if: always()
+        run: |
+          [ -f gitbucket.pid ] && kill $(cat gitbucket.pid) || true
+          pkill -f "gitbucket.war" || true
+
+      - name: Upload GitBucket logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitbucket-logs-java${{ matrix.java }}-gb${{ matrix.gitbucket }}
+          path: gitbucket-home/logs/
+          retention-days: 3

@@ -29,7 +29,7 @@ class ListRepositoriesTool extends ToolDef with RepoService {
     val owner        = str(args, "owner")
     val withoutForked = bool(args, "without_forked", default = false)
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     val repos = getUserRepositories(owner, withoutForked)
     val arr   = mapper.createArrayNode()
@@ -71,7 +71,7 @@ class GetRepositoryTool extends ToolDef with RepoService {
     val owner = str(args, "owner")
     val repo  = str(args, "repo")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     getRepository(owner, repo) match {
       case None =>

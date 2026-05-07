@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Set version in build.gradle
+        run: |
+          sed -i "s/^version = .*/version = '${{ steps.version.outputs.VERSION }}'/" build.gradle
+
+      - name: Run unit tests
+        run: ./gradlew test
+
+      - name: Build shadow JAR
+        run: ./gradlew shadowJar
+
+      - name: Rename artifact
+        run: |
+          mv build/libs/gitbucket-mcp-plugin-*.jar \
+             build/libs/gitbucket-mcp-plugin-${{ steps.version.outputs.VERSION }}.jar
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: GitBucket MCP Plugin ${{ github.ref_name }}
+          body: |
+            ## Installation
+
+            1. Download `gitbucket-mcp-plugin-${{ steps.version.outputs.VERSION }}.jar`
+            2. Copy it to `$GITBUCKET_HOME/plugins/`
+            3. Restart GitBucket
+
+            ## MCP Endpoint
+
+            ```
+            POST http://<gitbucket-host>/plugin-mcp/
+            ```
+
+            See the [README](https://github.com/${{ github.repository }}/blob/main/README.md) for full configuration instructions.
+          files: |
+            build/libs/gitbucket-mcp-plugin-${{ steps.version.outputs.VERSION }}.jar
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

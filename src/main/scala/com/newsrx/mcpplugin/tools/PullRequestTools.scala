@@ -68,7 +68,7 @@ class ListPullRequestsTool extends ToolDef with PrService {
     val state = strOpt(args, "state").getOrElse("open")
     val limit = math.min(intOpt(args, "limit", 30), 100)
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     val condition = new IssueSearchCondition(
       labels = Set.empty, milestone = None, priority = None,
@@ -109,7 +109,7 @@ class GetPullRequestTool extends ToolDef with PrService {
     val repo   = str(args, "repo")
     val number = int(args, "number")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     getPullRequest(owner, repo, number) match {
       case None =>
@@ -143,7 +143,7 @@ class AddPrCommentTool extends ToolDef with PrService {
     val number = int(args, "number")
     val body   = str(args, "body")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     getPullRequest(owner, repo, number).getOrElse(
       throw new NoSuchElementException(s"pull request #$number not found in $owner/$repo")
@@ -181,7 +181,7 @@ class ClosePullRequestTool extends ToolDef with PrService {
     val number = int(args, "number")
     val reason = strOpt(args, "reason")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     getPullRequest(owner, repo, number).getOrElse(
       throw new NoSuchElementException(s"pull request #$number not found in $owner/$repo")
@@ -213,7 +213,7 @@ class ReopenPullRequestTool extends ToolDef with PrService {
     val repo   = str(args, "repo")
     val number = int(args, "number")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     getPullRequest(owner, repo, number).getOrElse(
       throw new NoSuchElementException(s"pull request #$number not found in $owner/$repo")
@@ -245,7 +245,7 @@ class GetPrDiffTool extends ToolDef with PrService {
     val repo   = str(args, "repo")
     val number = int(args, "number")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     val (_, pr) = getPullRequest(owner, repo, number).getOrElse(
       throw new NoSuchElementException(s"pull request #$number not found in $owner/$repo")

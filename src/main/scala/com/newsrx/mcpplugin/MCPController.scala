@@ -6,6 +6,7 @@ import com.newsrx.mcpplugin.tools.SessionSupport
 import gitbucket.core.controller.ControllerBase
 import gitbucket.core.model.Account
 import gitbucket.core.service.{AccountService, RepositoryService, SystemSettingsService}
+import gitbucket.core.servlet.Database
 import java.util.Base64
 import javax.servlet.http.HttpServletResponse
 
@@ -190,13 +191,11 @@ class MCPController
         if (colon < 0) return None
         val username = decoded.substring(0, colon)
         val password = decoded.substring(colon + 1)
-        implicit val session = blockingSession
+        implicit val session = Database.getSession(request)
         val settings = loadSystemSettings()
         authenticate(settings, username, password)
       } catch {
-        case e: Exception =>
-          logger.error("MCP auth error", e)
-          None
+        case _: Exception => None
       }
     }
 }

@@ -55,7 +55,7 @@ class ListIssuesTool extends ToolDef with IssueService {
     val state = strOpt(args, "state").getOrElse("open")
     val limit = math.min(intOpt(args, "limit", 30), 100)
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     val condition = new IssueSearchCondition(
       labels = Set.empty, milestone = None, priority = None,
@@ -96,7 +96,7 @@ class GetIssueTool extends ToolDef with IssueService {
     val repo   = str(args, "repo")
     val number = int(args, "number")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     getIssue(owner, repo, number.toString) match {
       case None =>
@@ -130,7 +130,7 @@ class CreateIssueTool extends ToolDef with IssueService {
     val title = str(args, "title")
     val body  = strOpt(args, "body")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     val issueId = insertIssue(owner, repo,
       loginUser     = account.userName,
@@ -171,7 +171,7 @@ class CloseIssueTool extends ToolDef with IssueService {
     val number = int(args, "number")
     val reason = strOpt(args, "reason")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     getIssue(owner, repo, number.toString).getOrElse(
       throw new NoSuchElementException(s"issue #$number not found in $owner/$repo")
@@ -203,7 +203,7 @@ class ReopenIssueTool extends ToolDef with IssueService {
     val repo   = str(args, "repo")
     val number = int(args, "number")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     getIssue(owner, repo, number.toString).getOrElse(
       throw new NoSuchElementException(s"issue #$number not found in $owner/$repo")
@@ -237,7 +237,7 @@ class AddIssueCommentTool extends ToolDef with IssueService {
     val number = int(args, "number")
     val body   = str(args, "body")
 
-    implicit val session = blockingSession
+    implicit val session = blockingSession(request)
 
     getIssue(owner, repo, number.toString).getOrElse(
       throw new NoSuchElementException(s"issue #$number not found in $owner/$repo")
