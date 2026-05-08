@@ -6,8 +6,8 @@ Usage:
   python3 integration_test.py [--host HOST] [--port PORT] [--user USER] [--password PASSWORD]
 
 Expects a running GitBucket instance with the plugin deployed.
-Performs GitBucket initial setup if needed, creates test fixtures,
-then exercises all 14 MCP tools via JSON-RPC HTTP.
+Fresh GitBucket auto-creates root/root; pass --user/--password to match.
+Creates test fixtures then exercises all 14 MCP tools via JSON-RPC HTTP.
 """
 
 import argparse
@@ -78,46 +78,26 @@ def http_get(url: str, auth: str = None) -> tuple[int, str]:
 # ── GitBucket setup ───────────────────────────────────────────────────────────
 
 
-def wait_for_gitbucket(base_url: str, timeout: int = 120) -> bool:
+def wait_for_gitbucket(base_url: str, user: str, password: str, timeout: int = 120) -> bool:
+    """Wait until GitBucket's API accepts authentication.
+
+    Fresh GitBucket auto-creates root/root with no install wizard.
+    We poll /api/v3/user until we get a 200 (auth works) rather than
+    accepting any HTTP response, which would race the DB initialisation.
+    """
     print(f"  Waiting for GitBucket at {base_url} ...")
+    auth = basic_auth(user, password)
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            code, _ = http_get(f"{base_url}/")
-            if code in (200, 302, 303):
-                print("  GitBucket is up.")
+            code, _ = http_get(f"{base_url}/api/v3/user", auth=auth)
+            if code == 200:
+                print("  GitBucket is up and authenticated.")
                 return True
         except Exception:
             pass
-        time.sleep(2)
-    print("  ERROR: GitBucket did not start within timeout.")
-    return False
-
-
-def setup_gitbucket(base_url: str, user: str, password: str) -> bool:
-    """Complete the GitBucket initial setup wizard if not already done."""
-    install_code, install_body = http_get(f"{base_url}/install")
-    install_form_present = install_code == 200 and (
-        "adminName" in install_body
-        or "adminPassword" in install_body
-        or "adminMailAddress" in install_body
-    )
-    if install_form_present:
-        print("  Running GitBucket initial setup ...")
-    else:
-        print("  GitBucket already initialized.")
-        return True
-
-    code, body = http_post(f"{base_url}/install", {
-        "adminName": user,
-        "adminPassword": password,
-        "adminPasswordConfirm": password,
-        "adminMailAddress": f"{user}@localhost",
-    })
-    if code in (200, 302, 303):
-        print(f"  Setup complete (HTTP {code}).")
-        return True
-    print(f"  Setup failed: HTTP {code}\n{body[:500]}")
+        time.sleep(3)
+    print("  ERROR: GitBucket did not become ready within timeout.")
     return False
 
 
@@ -406,10 +386,7 @@ def main():
     print(f"=== GitBucket MCP Plugin Integration Tests ===")
     print(f"Target: {base_url}")
 
-    if not wait_for_gitbucket(base_url):
-        sys.exit(1)
-
-    if not setup_gitbucket(base_url, args.user, args.password):
+    if not wait_for_gitbucket(base_url, args.user, args.password):
         sys.exit(1)
 
     try:

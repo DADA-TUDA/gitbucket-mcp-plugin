@@ -78,7 +78,7 @@ jobs:
             --port 8080 \
             --user root \
             --password root
-        timeout-minutes: 5
+        timeout-minutes: 8
 
       - name: Stop GitBucket
         if: always()
