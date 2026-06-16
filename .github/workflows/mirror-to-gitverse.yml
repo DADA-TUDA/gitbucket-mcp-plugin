@@ -24,6 +24,7 @@ jobs:
           git clone --mirror \
             "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/${REPO}.git" repo.git
           cd repo.git
-          git push --mirror --force \
-            "https://${GV_ACTOR}:${GV_TOKEN}@gitverse.ru/${GV_ORG}/${REPO}.git"
+          TARGET="https://${GV_ACTOR}:${GV_TOKEN}@gitverse.ru/${GV_ORG}/${REPO}.git"
+          git push --force "$TARGET" '+refs/heads/*:refs/heads/*'
+          git push --force "$TARGET" '+refs/tags/*:refs/tags/*'
 
